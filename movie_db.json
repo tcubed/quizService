@@ -1,0 +1,142 @@
+[
+  {
+    "INDEX":0,
+    "TYPE":"MR",
+    "QUESTION":"According to Seven Brides for Seven Brothers, my stew what?",
+    "ANSWER":"stands on its own feet",
+    "MOVIE":"Seven Brides for Seven Brothers"
+  },
+  {
+    "INDEX":1,
+    "TYPE":"SIT",
+    "QUESTION":"[Who to whom and where] I might have known she'd have a girl.",
+    "ANSWER":"Adam to Gideon at the trapping cabin.",
+    "MOVIE":"Seven Brides for Seven Brothers"
+  },
+  {
+    "INDEX":2,
+    "TYPE":"FTL",
+    "QUESTION":"Bless yore beautiful\u2026",
+    "ANSWER":"Hide",
+    "MOVIE":"Seven Brides for Seven Brothers"
+  },
+  {
+    "INDEX":3,
+    "TYPE":"INT",
+    "QUESTION":"Sabine what?",
+    "ANSWER":"Women",
+    "MOVIE":"Seven Brides for Seven Brothers"
+  },
+  {
+    "INDEX":4,
+    "TYPE":"SIT",
+    "QUESTION":"[Who to whom] No one told the horse.",
+    "ANSWER":"Racetrack to Jack.",
+    "MOVIE":"Newsies"
+  },
+  {
+    "INDEX":5,
+    "TYPE":"INT",
+    "QUESTION":"No one told what?",
+    "ANSWER":"The horse.",
+    "MOVIE":"Newsies"
+  },
+  {
+    "INDEX":6,
+    "TYPE":"FTL",
+    "QUESTION":"I want you to get married\u2026",
+    "ANSWER":"I want you to have nine children.  And if you only spend five minutes a day with each kid, that's forty-five minutes, and I'd at least have time to go out and get a massage or something.",
+    "MOVIE":"White Christmas"
+  },
+  {
+    "INDEX":7,
+    "TYPE":"FTL",
+    "QUESTION":"How can a guy that ugly have the nerve to have sisters?",
+    "ANSWER":"Very brave parenting",
+    "MOVIE":"White Christmas"
+  },
+  {
+    "INDEX":8,
+    "TYPE":"FTL",
+    "QUESTION":"When what's left of you\u2026",
+    "ANSWER":"... gets around to what's left to be gotten, what's left to be gotten won't be worth getting, whatever it is you've got left.",
+    "MOVIE":"White Christmas"
+  },
+  {
+    "INDEX":9,
+    "TYPE":"FTL",
+    "QUESTION":"If you ever stop talking\u2026",
+    "ANSWER":"\u2026 I won't be late.",
+    "MOVIE":"Fiddler on the Roof"
+  },
+  {
+    "INDEX":10,
+    "TYPE":"SIT",
+    "QUESTION":"[Who to whom] Oh, yes you are, Captian.",
+    "ANSWER":"Captian to Maria",
+    "MOVIE":"Sound of Music"
+  },
+  {
+    "INDEX":11,
+    "TYPE":"MR",
+    "QUESTION":"According to Guardians of the Galaxy, I am what?",
+    "ANSWER":"I am Groot",
+    "MOVIE":"Guardians of the Galaxy"
+  },
+  {
+    "INDEX":12,
+    "TYPE":"SIT",
+    "QUESTION":"[Who said it] I'm Mary Poppins, y'all.",
+    "ANSWER":"Yondu",
+    "MOVIE":"Guardians of the Galaxy"
+  },
+  {
+    "INDEX":13,
+    "TYPE":"INT",
+    "QUESTION":"Who collects ceramic unicorns?",
+    "ANSWER":"Vladimir",
+    "MOVIE":"Tangled"
+  },
+  {
+    "INDEX":14,
+    "TYPE":"INT",
+    "QUESTION":"Who's cupcakes are sublime?",
+    "ANSWER":"Attila",
+    "MOVIE":"Tangled"
+  },
+  {
+    "INDEX":15,
+    "TYPE":"SIT",
+    "QUESTION":"[Who to whom] Where is my supersuit?",
+    "ANSWER":"Lucious to Honey.",
+    "MOVIE":"Incredibles"
+  },
+  {
+    "INDEX":16,
+    "TYPE":"FTL",
+    "QUESTION":"We're dead.  We're dead.",
+    "ANSWER":"We're dead.  We're dead.  We survived but we're dead.",
+    "MOVIE":"Incredibles"
+  },
+  {
+    "INDEX":17,
+    "TYPE":"SIT",
+    "QUESTION":"[Who to whom] You are a toy.",
+    "ANSWER":"Woody to Buzz.",
+    "MOVIE":"Toy Story"
+  },
+  {
+    "INDEX":18,
+    "TYPE":"FTL",
+    "QUESTION":"You are a sad\u2026",
+    "ANSWER":"\u2026strange little man.",
+    "MOVIE":"Toy Story"
+  },
+  {
+    "INDEX":19,
+    "TYPE":"INT",
+    "QUESTION":"What stands for pool?",
+    "ANSWER":"P",
+    "MOVIE":"Music Man"
+  }
+]

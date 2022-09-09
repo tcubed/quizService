@@ -169,14 +169,31 @@ function filterContent($cont,$qtype=''){
                 }
             }
             break;
+        /*=======================*/
+        case 'MR':
+            foreach($cont as $q){
+                if($q['TYPE']=='MR'){
+                    array_push($arr,$q);
+                }
+            }
+            break;
+        case 'FTL':
+            foreach($cont as $q){
+                if($q['TYPE']=='FTL'){
+                    array_push($arr,$q);
+                }
+            }
+            break;
+        /*=======================*/
         default:
             return $cont;
     }
     return $arr;
 }
+
 function pickRandom($cont){
     $cnt=count($cont);
-    $idx=random_int(0,$cnt);
+    $idx=random_int(0,$cnt-1);
     return $cont[$idx];
 }
 function print_c($cont){
@@ -197,8 +214,8 @@ function validateServer(){
         die;
     };
 }
-function loadDB(){
-    return json_decode(file_get_contents('acts_db.json'),JSON_OBJECT_AS_ARRAY);
+function loadDB($db){
+    return json_decode(file_get_contents($db),JSON_OBJECT_AS_ARRAY);
 }
 function load_data(){
     if(file_exists('data.json')==false){
@@ -282,7 +299,7 @@ function check_user(){
         else{
             $nm=$nmtok[0];
         }
-        $msg=$msg."Found all expected cookies (user:'".$nm."').";
+        $msg=$msg."User:'".$nm."'.";
         logVisitors($msg);
     }
 }
@@ -357,8 +374,29 @@ if(array_key_exists("log",$_GET)){
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 // QUESTIONS
-// load questions and users
-$db=loadDB();
+if(array_key_exists("o",$_GET)){
+    if($_GET["o"]=="MOVIES"){
+        $cont=loadDB('movie_db.json');
+
+        if(array_key_exists('qt',$_GET)){
+            $cont=filterContent($cont,$_GET['qt']);
+        }
+    
+        $q=pickRandom($cont);
+        $j=json_encode($q);
+        echo $j;
+        die;
+    }
+    else{
+        $msg="'other' database ".$_GET["o"]." not supported.";
+        echo json_encode(array("msg"=>$msg,"status"=>1));
+        die;
+    }
+}
+
+
+// load questions
+$db=loadDB('acts_db.json');
 
 if(array_key_exists("i",$_GET)){
     // question by index

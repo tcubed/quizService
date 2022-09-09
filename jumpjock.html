@@ -200,6 +200,18 @@ function initAccount(){
     else{
         e.value = optionToSelect.value;
     }
+
+    // set material
+    material=getCookie("material")
+    var e=document.getElementById('a_material')
+    var opt=Array.from(e.options)
+    var optionToSelect = opt.find(item => item.value ===material);
+    if(typeof optionToSelect === "undefined"){
+        e.value="ACTS";
+    }
+    else{
+        e.value = optionToSelect.value;
+    }
 }
 function acctChange(){
     var exdays=365*4;
@@ -209,7 +221,18 @@ function acctChange(){
     var opt=document.getElementById('a_district').options 
 	var district=opt[opt.selectedIndex].value 
     setCookie('district',district,exdays);
-    //window.location.reload(true)
+
+    var opt=document.getElementById('a_material').options 
+	var material=opt[opt.selectedIndex].value
+    var reload=false
+    if(material!=getCookie('material')){
+        reload=true
+    }
+    setCookie('material',material,exdays);
+    if(reload){
+        window.location.reload(true)
+    }
+    //
 }
 function checkLegacy(){
     getuid();
@@ -231,6 +254,14 @@ function bugreport(){
 //========================================================================
 //========================================================================
 function getQuestion(){
+    if(getCookie('material')=='ACTS'){
+        getQuestionBible()
+    }
+    else{
+        getQuestionOther()
+    }
+}
+function getQuestionBible(){
     var e=document.getElementById('question')
     e.textContent='QUESTION: '
     var e=document.getElementById('answer')
@@ -263,13 +294,6 @@ function getQuestion(){
     }
     console.log(q);
     resp=getText(q,cb_question);
-    //console.log(resp);
-    //J=JSON.parse(resp);
-    //console.log(J)
-
-    //var e=document.getElementById('question')
-    //e.value=J;
-
 }
 function cb_question(resp){
     console.log(resp);
@@ -361,6 +385,54 @@ function jump(){
 function doneAnswering(){
     showa();
 }
+
+function getQuestionOther(){
+    var e=document.getElementById('question')
+    e.textContent='QUESTION: '
+    var e=document.getElementById('answer')
+    e.textContent='ANSWER: '
+    var e=document.getElementById('msg')
+    e.textContent='';
+
+
+    url='api.php?'
+    var qto=document.getElementById('qtypeOther').options;
+    var qt=qto[qto.selectedIndex].text;
+
+    var material=getCookie('material')
+    q=url+'o='+material;
+
+    if(qt!="ALL"){
+        q+="&qt="+qt;
+    }
+    console.log(q);
+    resp=getText(q,cb_questionOther);
+}
+function cb_questionOther(resp){
+    console.log(resp);
+    J=JSON.parse(resp);
+    console.log(J)
+
+    // show jump button
+    var e=document.getElementById('buttonGet');
+    e.style.display ='none';
+    var e=document.getElementById('buttonJump');
+    e.style.display ='block';
+    var e=document.getElementById('buttonAnswered');
+    e.style.display ='none';
+
+    IWD=0;
+    QTYPE=J['TYPE']
+    QUESTION=J['QUESTION']
+    ANSWER=J['ANSWER']+' ('+J['MOVIE']+')';
+    
+    // show the question type
+    var e=document.getElementById('question')
+    e.innerHTML='QUESTION ['+QTYPE+']'
+
+    // let the question time sink in for 1sec
+    mytimer=setTimeout(showQuestionType,1000);
+}
 //========================================================================
 //========================================================================
 //                              SPLASH
@@ -394,6 +466,32 @@ async function getText(q,cb) {
   let myText = await myObject.text();
   cb(myText);
 }
+//========================================================================
+//========================================================================
+//                              MATERIAL
+//========================================================================
+//========================================================================
+function updateMaterial(){
+    if(getCookie('material')==""){
+        setCookie('material','ACTS');
+    }
+    var mat=getCookie('material')
+    if(mat=='ACTS'){
+        document.getElementById('bibleRef').style.display='block';
+        document.getElementById('qtype').style.display='block';
+        document.getElementById('qtypeOther').style.display='none';
+    }
+    else if(mat=='MOVIES'){
+        document.getElementById('bibleRef').style.display='none';
+        document.getElementById('qtype').style.display='none';
+        document.getElementById('qtypeOther').style.display='block';
+    }
+}
+//========================================================================
+//========================================================================
+//                              
+//========================================================================
+//========================================================================
     </script>
 
 </head>
@@ -480,6 +578,16 @@ async function getText(q,cb) {
 						<option value="Other">Other</option>
 					</select>
                 </div>
+                <div class="input-group mb-3">
+                    <span class="input-group-text">Material</span>
+                    <!--
+                    <input type="text" class="form-control" pattern="[A-Z]{4}" id="a_district" onchange="acctChange()">
+                    -->
+                    <select id="a_material" onchange="acctChange()">
+						<option value="ACTS">Acts</option>
+						<option value="MOVIES">Movies</option>
+					</select>
+                </div>
 
                 <input type="button" value="Reload Page" onClick="window.location.reload(true)">
         </div>
@@ -542,56 +650,47 @@ async function getText(q,cb) {
     Open modal
   </button>
 -->
-    <div class="row">
-        <div class="col">
-            <h6>Start</h6>
+    <div id="bibleRef">
+        <div class="row">
+            <div class="col">
+                <h6>Start</h6>
+            </div>
+            <div class="col">
+                <select id="selectBook1" class="form-select form-select-sm" disabled>
+                    <option>Acts</option>
+                </select> 
+            </div>
+            <div class="col">
+                <div class="input-group mb-3 input-group-sm">
+                <input type="text" class="form-control" placeholder="1" id="ch1" value="1">
+                </div>
+            </div>
+            <div class="col">
+                <div class="input-group mb-3 input-group-sm">
+                <input type="text" class="form-control" placeholder="1" id="vs1" value="1">
+                </div>
+            </div>
         </div>
-        <div class="col">
-            <select id="selectBook1" class="form-select form-select-sm" disabled>
+
+        <div class="row">
+            <div class="col">
+                <h6>End</h6>
+            </div>
+            <div class="col">
+            <select id="selectBook2" class="form-select form-select-sm" disabled>
                 <option>Acts</option>
             </select> 
-        </div>
-        <div class="col">
-            <div class="input-group mb-3 input-group-sm">
-            <input type="text" class="form-control" placeholder="1" id="ch1" value="1">
             </div>
-        </div>
-        <div class="col">
-            <div class="input-group mb-3 input-group-sm">
-            <input type="text" class="form-control" placeholder="1" id="vs1" value="1">
+            <div class="col">
+                <div class="input-group mb-3 input-group-sm">
+                    <input type="text" class="form-control" placeholder="4" id="ch2" value="4">
+                </div>
             </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col">
-            <h6>End</h6>
-        </div>
-        <div class="col">
-        <select id="selectBook2" class="form-select form-select-sm" disabled>
-            <option>Acts</option>
-        </select> 
-        </div>
-        <div class="col">
-            <div class="input-group mb-3 input-group-sm">
-                <input type="text" class="form-control" placeholder="4" id="ch2" value="4">
+            <div class="col">
+                <div class="input-group mb-3 input-group-sm">
+                    <input type="text" class="form-control" placeholder="22" id="vs2" value="22">
+                </div>
             </div>
-        </div>
-        <div class="col">
-            <div class="input-group mb-3 input-group-sm">
-                <input type="text" class="form-control" placeholder="22" id="vs2" value="22">
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-sm-6">
-            <!--<h6>Start</h6>-->
-            
-        </div>
-        <div class="col-sm-6">
-            <!--<h6>End</h6>-->
-            
         </div>
     </div>
 
@@ -610,10 +709,14 @@ async function getText(q,cb) {
                 <option>INT</option>
                 <option>SIT</option>
             </select>
+
+            <select class="form-select form-select-sm" id="qtypeOther">
+                <option>ALL</option>
+                <option>MR</option>
+                <option>FTL</option>
+                <option>SIT</option>
+            </select>
         </div>
-    </div>
-    <div class="mb-3">
-        
     </div>
 
     <div class="btn-group" style="margin-top:20px">
@@ -671,12 +774,15 @@ IWD=0;
 QTYPE='';
 QUESTION='';
 ANSWER='';
+MATERIAL='';
 
 //getuid();
 if(hasCookie()){
     checkLegacy();
     getSplash();
     initAccount();
+
+    updateMaterial();
 }
 
 
