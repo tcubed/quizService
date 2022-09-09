@@ -1,23 +1,28 @@
 <?php
 date_default_timezone_set("America/Chicago");
-function getUserRecord(){
-    $db=load_data();
-    foreach($db["users"] as $u){
-        if($u["email"]==$_COOKIE["email"]){return $u;}
-    }
-}
+//===============================================================================
+//===============================================================================
+//                             LOCATION/LOGGING
+//===============================================================================
+//===============================================================================
 function getUserLoc_old($ip){
+    echo "file_get_contents";
     $url='http://api.ipstack.com/'.$ip.'?access_key=8a33354d0397b348fde8c3bc27a4297c';
+    echo $url."<br />";
     $json = file_get_contents($url);
     echo $json;
 }
 function getUserLoc($ip){
+    echo "curl";
     // set IP address and API access key
     //$ip = '134.201.250.155';
     $access_key = '8a33354d0397b348fde8c3bc27a4297c';
 
     // Initialize CURL:
-    $ch = curl_init('http://api.ipstack.com/'.$ip.'?access_key='.$access_key.'');
+    $url='http://api.ipstack.com/'.$ip.'?access_key='.$access_key;
+    echo $url.'<br />';
+    $ch = curl_init($url);
+    
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
     // Store the data:
@@ -28,7 +33,9 @@ function getUserLoc($ip){
     $api_result = json_decode($json, true);
 
     // Output the "capital" object inside "location"
+    echo "json <br />";
     echo $json;
+    echo "api result<br />";
     echo $api_result['location']['capital'];
 }
 
@@ -38,21 +45,19 @@ function logVisitors($msg=""){
     //$today=$now->format('Y-m-d H:i:s');
     $today=$now->format('Y-m-d H:i');
     $ip = $_SERVER["REMOTE_ADDR"];
-    $u=getUserRecord();
+    if(array_key_exists("id",$_COOKIE)==False){
+        $id="?";
+        $msg=$msg." Visitors should have an id...";
+    }
+    else{
+        $id=$_COOKIE["id"];
+    }
+    
 
-    $logmsg=$today.','.$u["id"].','.$ip;
+    $logmsg=$today.','.$id.','.$ip;
     if($msg!=""){
         $logmsg=$logmsg.','.$msg;
     }
-
-    // get all user id
-    /*
-    $db=load_data();
-    $ui=array();
-    foreach($db["users"] as $u1){
-        array_push($ui,$u1["id"]);
-    }
-    */
 
     // check for 
     if(file_exists($fnlog)){
@@ -62,44 +67,15 @@ function logVisitors($msg=""){
         }
     }
     file_put_contents($fnlog, $logmsg.PHP_EOL , FILE_APPEND | LOCK_EX);
-
-
-    /*
-    //$serverTimestamp = (new DateTime())->getTimestamp();
-    //echo $serverTimestamp->format('U = Y-m-d H:i:s') . "\n";
-    
-    $ip = $_SERVER["REMOTE_ADDR"];
-    $quizid=$_GET["id"];
-    $todayVizStr=$today.','.$ip.','.$quizid.','.$msg;
-    
-    $fileday=sys_get_temp_dir().'/quizDay'.$today.'.csv';
-    //unlink($fileday);
-
-    //echo '<br>fileday: '.$fileday.'<br>';
-    if(file_exists($fileday)){
-        $arr=explode(PHP_EOL,file_get_contents($fileday));
-        //echo 'todayfile<br>';
-        //var_dump($arr);
-        if(in_array($todayVizStr,$arr)){
-            //echo "<br>found ".$todayVizStr.'<br>';
-            return;
-        }
-        else{
-            //echo '<br> could not find '.$todayVizStr.'<br>';
-        }
-    }
-    //echo '<br>lets log!<br>';
-    file_put_contents($fileday, $todayVizStr.PHP_EOL , FILE_APPEND | LOCK_EX);
-    file_put_contents('visitors.txt', $todayVizStr.PHP_EOL , FILE_APPEND | LOCK_EX);
-    */
 }
-function loadDB(){
-    return json_decode(file_get_contents('acts_db.json'),JSON_OBJECT_AS_ARRAY);
+function tailFile($filepath, $lines = 1) {
+    return trim(implode("<br >", array_slice(file($filepath), -$lines)));
 }
-function validServer(){
-    // if this server is a valid user, this is OK!
-    return array_key_exists($_SERVER['SERVER_NAME'],$GLOBALS['CFG']["servers"]);
-}
+//===============================================================================
+//===============================================================================
+//                                QUESTIONS
+//===============================================================================
+//===============================================================================
 function qByIndex($idx){
     global $db;
     return $db[$idx];
@@ -209,8 +185,21 @@ function print_c($cont){
     }
 }
 
-// =============================================
-//                    DB
+//===============================================================================
+//===============================================================================
+//                                DB
+//===============================================================================
+//===============================================================================
+function validateServer(){
+    // if this server is approved, this is OK!
+    if(array_key_exists($_SERVER['SERVER_NAME'],$GLOBALS['CFG']["servers"])==false){
+        echo json_encode(array("msg"=>"Sorry.  You don't have permissions.","status"=>"1"));
+        die;
+    };
+}
+function loadDB(){
+    return json_decode(file_get_contents('acts_db.json'),JSON_OBJECT_AS_ARRAY);
+}
 function load_data(){
     if(file_exists('data.json')==false){
         $J='{"users":[]}';
@@ -218,104 +207,161 @@ function load_data(){
     }
     // load db
     $arr=json_decode(file_get_contents("data.json"),true);
-    //echo "arr<br />";
-    //var_dump($arr);
     return $arr;
 }
 function save_data($arr){
     file_put_contents("data.json", json_encode($arr), LOCK_EX);
 }
+
+function registerUser(){
+	$db=load_data();
+	$U=$db["users"];
+	
+	// make sure there is the cookie has "email"
+	if(array_key_exists("email",$_COOKIE)==false){
+        $msg='why is there no email cookie?  $_COOKIE: '.print_r($_COOKIE,true);
+        $J=array("msg"=>$msg,"status"=>1);
+        echo json_encode($J);
+        logVisitors($msg);
+		die;
+	}
+	
+	// confirm user isn't is database
+	$found=false;
+	foreach($U as $k => $v){
+		if($v["email"]==$_COOKIE["email"]){
+			$found=True;
+			break;
+		}
+	}
+	
+	if($found){
+        $msg="registration: found email (".$_COOKIE["email"]."); existing user '".$k."'.";
+		//echo '{"msg":"found email","id":'.$k.'}';
+        echo json_encode(array("msg"=>$msg,"id"=>$k));
+        $_COOKIE["id"]=$k;
+        logVisitors($msg);
+		die;
+	}
+	else{
+        // get next ID
+        $uid=array_keys($db["users"]);
+        $nextId=max($uid)+1;
+
+        // assign
+        $msg="New email registration (".$_COOKIE["email"].").  Assigned user id=".$nextId.".";
+		//echo '{"msg":"new email","id":'.$nextId.'}';
+        echo json_encode(array("msg"=>$msg,"id"=>$nextId));
+        $_COOKIE["id"]=$nextId;
+		$db["users"][$nextId]=$_COOKIE;
+        save_data($db);
+        logVisitors($msg);
+		die;
+	}
+}
 function check_user(){
-    $db=load_data();
-    //var_dump($db);
-    $foundUser=false;
-    foreach($db["users"] as $u){
-        if($u["email"]==$_COOKIE["email"]){
-            // valid user
-            $foundUser=true;
-            break;
+    // check that all expected cookies are populated
+    $req=array("username","displayname","email","district","id");
+    //$req=array("username","displayname","email","district");
+    $msg="";$status=0;
+    foreach($req as $k){
+        if(array_key_exists($k,$_COOKIE)==false){
+            $msg=$msg."No ".$k." cookie.  ";$status=1;
         }
     }
-    
-    if($foundUser==false){
-        // find last id
-        $lastid=-1;
-        foreach($db["users"] as $u){
-            if($u["id"]>$lastid){$lastid=$u["id"];}
+    if($status){
+        echo json_encode(array("msg"=>$msg,"status"=>$status));
+        logVisitors($msg);
+        die;
+    }
+    else{
+        $nmtok=explode(" ",$_COOKIE["username"]);
+        if(count($nmtok)>1){
+            $nm=substr($nmtok[0],0,1).' '.$nmtok[1];
         }
-        // create new user entry
-        $u=array();
-        foreach(array_keys($_COOKIE) as $key){
-            $u[$key]=$_COOKIE[$key];
+        else{
+            $nm=$nmtok[0];
         }
-        $u["id"]=$lastid+1;
-        array_push($db["users"],$u);
-        save_data($db);
+        $msg=$msg."Found all expected cookies (user:'".$nm."').";
+        logVisitors($msg);
     }
 }
+function getuid(){
+    if(array_key_exists("email",$_COOKIE)==false){
+        $msg="no email in cookie:".print_r($_COOKIE,true);
+        echo json_encode(array("msg"=>$msg,"status"=>1));
+        logVisitors($msg);
+        die;
+    }
 
+    $db=load_data();
+    $U=$db["users"];
+    foreach($U as $k => $v){
+        if($v["email"]==$_COOKIE["email"]){
+            echo json_encode(array("msg"=>"email:".$v["email"],"id"=>$k,"status"=>0));
+            $msg="Legacy user: found email:".$v["email"]." with id=".$k;
+            $_COOKIE["id"]=$k;
+            logVisitors($msg);
+            die;
+        }
+    }
+    $msg="found email:".$v["email"]." but no id?!";
+    echo json_encode(array("msg"=>$msg,"status"=>1));
+    logVisitors($msg);
+    die;
+}
+//===============================================================================
+//===============================================================================
+//                                MAIN
+//===============================================================================
+//===============================================================================
 
-
-
-// =============================================
-// load questions and users
-$db=loadDB();
+// inits
 $CFG=json_decode(file_get_contents('cfg.json'),JSON_OBJECT_AS_ARRAY);
+$msg="";
 
-if(validServer()==false){
-    echo "sorry.  you don't have permissions.";
+// validate this server is allowed.
+validateServer();
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// REQUESTS THAT DON'T NEED THE DATABASE
+// handle registration requests
+if(array_key_exists("reg",$_GET)){
+	registerUser();
+}
+if(array_key_exists("uid",$_GET)){
+    getuid();
+}
+
+check_user();
+//logVisitors();
+
+// handle picture requests
+if(array_key_exists("p",$_GET)){
+    $L=glob("pics/".$_COOKIE["district"]."*.jpg");
+    if(count($L)==0){
+        echo json_encode(array("msg"=>"no pictures from ".$_COOKIE["district"]." yet."));
+        die;
+    }
+    $idx=random_int(0,count($L)-1);
+    echo json_encode(array("msg"=>"success!","img"=>$L[$idx]));
+    //logVisitors("get image");
     die;
 }
 
-
-
-//var_dump($_COOKIE);
-//$data=load_data();
-//var_dump($data);
-
-/*
-$unm=$_COOKIE["email"];
-$unm=str_replace("@","_",$unm);
-$unm=str_replace(".","",$unm);
-$unm = filter_var($unm, FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_HIGH);
-echo "username: ".$unm."<br />";
-*/
-check_user();
-
-$ip=$_SERVER["REMOTE_ADDR"];
-getUserLoc($ip);
-
-logVisitors();
-
-/*
-$foundUser=false;
-foreach($db["users"] as $u){
-    if($u["email"]==$_COOKIE["email"]{
-        // valid user
-        $foundUser=true;
-        break;
-    })
+// logs
+if(array_key_exists("log",$_GET)){
+    echo tailFile("logs.txt",$_GET["log"]);
+    die;
 }
 
-if($foundUser==false){
-    // find last id
-    $lastid=-1;
-    foreach($db["users"] as $u){
-        if($u["id"]>$lastid){$lastid=$u["id"];}
-    }
-
-    $u=array();
-    foreach(array_keys($_COOKIE) as $key){
-        $u[$key]=$_COOKIE[$key];
-    }
-    $u["id"]=$lastid+1;
-    array_push($db["users"],$u);
-    save_db($db);
-}
-*/
-
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// QUESTIONS
+// load questions and users
+$db=loadDB();
 
 if(array_key_exists("i",$_GET)){
+    // question by index
     $q=qByIndex((int)$_GET["i"]);
     echo json_encode($q);
 }
@@ -325,28 +371,24 @@ elseif(array_key_exists("rs",$_GET)&array_key_exists("re",$_GET)){
     $cont=contentByIntervals($bcvarr);
     //$cont=filterContent($cont,$set="Local");
 
-    // set
+    // hardcode filter by Local
     $arr=array();
     foreach($cont as $q){
         if($q['SET']=="Local"){
             array_push($arr,$q);
         }
     }
-    //$cont= $arr->getArrayCopy();
     $cont=$arr;
 
     if(array_key_exists('qt',$_GET)){
         $cont=filterContent($cont,$_GET['qt']);
     }
+
     $q=pickRandom($cont);
     $j=json_encode($q);
     echo $j;
 }
-elseif(array_key_exists("p",$_GET)){
-    $L=glob("pics/".$_COOKIE["district"]."*.jpg");
-    $idx=random_int(0,count($L)-1);
-    echo $L[$idx];
-}
+
 else{
     $cnt=count($db);
     echo $cnt.' questions <br />';
@@ -360,79 +402,4 @@ else{
     //var_dump(validUser());
 }
 
-/*
-$bcvarr=array(array('Acts_1_1','Acts_1_5'));
-$cont=contentByIntervals($bcvarr);
-echo 'content: '.count($cont).' elements. <br />';
-
-$cont=filterContent($cont,'INT');
-echo 'content: '.count($cont).' elements. <br />';
-print_c($cont);
-//var_dump($d);
-echo 'random question<br />';
-$q=pickRandom($cont);
-var_dump($q);
-/*
-
-/*
-// get quizid
-if(array_key_Exists("id",$_GET)){
-    $quizid=$_GET["id"];
-}
-else{
-    $quizid=$_POST["id"];
-}
-$quizid = preg_replace("/[^A-Za-z0-9]/", '', $quizid);
-
-// quizfile
-$quizfile=sys_get_temp_dir().'/quiz'.$quizid.'.csv';
-
-// stats file
-
-//$quizpubfile=sys_get_temp_dir().'/quiz'.$quizid.'pub.csv';
-
-// jump requests
-if(array_key_exists("q",$_GET)){
-    pushJump($quizfile);
-}
-if(array_key_exists("p",$_GET)){
-    // /poll request
-    if(file_exists($quizfile)){
-        $arr=getJump($quizfile);
-    }
-    else{
-        echo '{"jump":"none"}';
-    }
-    logVisitors('get jumps');
-}
-if(array_key_exists("stats",$_GET)){
-    // record stats
-    logStats();
-    logVisitors('stats');
-}
-
-//
-// quiz master
-//
-if(array_key_exists("r",$_GET)){
-    // reset quizid file (jumps) or signal a jump
-    quizmasterReset($quizfile);
-}
-if(array_key_exists("qmstamp",$_GET)){
-    // set or poll the quizmaster timestamp
-    quizMasterTimeStamp($quizid);
-}
-
-//
-// scorekeeper
-//
-if(array_key_exists("quizData",$_POST)){
-    setQuizData($quizid,$_POST["quizData"]);
-}
-if(array_key_exists("getScore",$_POST)){
-    $quizid = preg_replace("/[^A-Za-z0-9]/", '', $_POST['getScore']);
-    getQuizData($quizid);
-}
-
-*/
 ?>

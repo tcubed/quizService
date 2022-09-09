@@ -79,8 +79,17 @@ body {
     display: block;
     width: 80%;
     max-width: 700px;
+    z-index: 1025 !important;
   }
   
+
+  .modal-backdrop {
+    display: none;
+    z-index: 1020 !important;
+}
+
+
+
   /* Caption of Modal Image */
   #caption {
     margin: auto;

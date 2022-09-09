@@ -16,11 +16,17 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script> 
 
     <script>
+//========================================================================
+//========================================================================
+//                              REGISTRATION
+//========================================================================
+//========================================================================
 function setCookie(cname, cvalue, exdays) {
   const d = new Date();
   d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
   let expires = "expires="+d.toUTCString();
-  document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+  let sameSite= "SameSite=Lax";
+  document.cookie = cname + "=" + cvalue + ";" +sameSite + ";" + expires + ";path=/";
 }
 function getCookie(cname) {
   let name = cname + "=";
@@ -36,16 +42,62 @@ function getCookie(cname) {
   }
   return "";
 }
-function checkCookie() {
-  let user = getCookie("username");
-  if (user != "") {
-    //alert("Welcome again " + user);
-    document.getElementById('divRegister').style.display='none';
-    document.getElementById('divJump').style.display='block';
+function deleteCookie(cname){
+    document.cookie = cname+"=; SameSite=Lax; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+}
+function deleteCookies(){
+    deleteCookie("username");
+    deleteCookie("displayname");
+    deleteCookie("email");
+    deleteCookie("district");
+    deleteCookie("id");
+}
+function getuid(){
+    // check if has id cookie
+    let id = getCookie("id");
+    if(id==""){
+        console.log('no cookie id... go get an id!')
+        q='api.php?uid'
+        resp=getText(q,cb_getuid);
+    }
+}
+function cb_getuid(resp){
+    console.log('cb_getuid')
+    J=JSON.parse(resp)
+    if("id" in J){
+        setCookie("id",J["id"])
+        window.location.reload(true)
+    }
+    else{
+        console.log('problem assigning id')
+        console.log(resp);
+    }
+}
+function hasCookie() {
+    // check if has id cookie
+    /*
+    let id = getCookie("id");
+    if(id==""){
+        console.log('no cookie id... go get an id!')
+        q='api.php?uid'
+        resp=getText(q,cb_getuid);
+    }
+    */
 
-    var e=document.getElementById('userDisplayName');
-    e.innerHTML=user;
-  } 
+    let usernm = getCookie("username");
+    let dispnm = getCookie("displayname");
+    if (usernm != "") {
+        console.log("Welcome again " + usernm);
+        document.getElementById('divRegister').style.display='none';
+        document.getElementById('divJump').style.display='block';
+
+        //var e=document.getElementById('userDisplayName');
+        //e.innerHTML=dispnm;
+        return true;
+    } 
+
+  
+
   /*else {
     user = prompt("Please enter your name:", "");
     if (user != "" && user != null) {
@@ -53,7 +105,10 @@ function checkCookie() {
     }
   }
   */
+  return false;
 } 
+
+
 function validateEmail(emailId){
     var mailformat = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
     if(emailId.value.match(mailformat)){
@@ -77,210 +132,104 @@ function register(){
     var unm=document.getElementById('username').value;
     var dnm=document.getElementById('displayname').value;
     var email=document.getElementById('email').value;
-    var district=document.getElementById('district').value;
+    //var district=document.getElementById('district').value;
+    var opt=document.getElementById('district').options 
+	var district=opt[opt.selectedIndex].value 
 
     var ok=validateEmail(document.form1.email);
-    if(ok){
-        ok=validateDistrict(document.form1.district);
-    }
-    if(ok){
-        var exdays=365*4;
-        setCookie('username', unm, exdays)
-        setCookie('displayname', dnm, exdays)
-        setCookie('email', email, exdays)
-        setCookie('district', district, exdays)
-        window.location.reload(true)
-    }
-    console.log('validation:'+ok)
+    if(ok==false){return}
+    //ok=validateDistrict(document.form1.district);
+    //if(ok==false){return}
+
+    var exdays=365*4;
+    setCookie('username', unm, exdays)
+    setCookie('displayname', dnm, exdays)
+    setCookie('email', email, exdays)
+    setCookie('district', district, exdays)
+
+    //console.log('registration... go get an id!')
+    //q='api.php?uid'
+    //resp=getText(q,cb_reggetuid);
+    q='api.php?reg'
+    resp=getText(q,cb_registration);
+    console.log('register() done')
 }
+/*
+function cb_reggetuid(resp){
+    console.log('cb_reggetuid')
+    J=JSON.parse(resp)
+    if("id" in J){
+        setCookie("id",J["id"])
+        //window.location.reload(true)
+    }
+    else{
+        console.log('problem assigning id')
+        console.log(resp);
+    }
+}
+*/
+function cb_registration(resp){
+    var J=JSON.parse(resp);
+    console.log("cb_registration...")
+    console.log(J)
+
+    var exdays=365*4;
+    setCookie('id',J['id'],exdays);
+    window.location.reload(true)
+    console.log('cb_registration() done')
+}
+//========================================================================
+//========================================================================
+//                              ACCOUNT INFO
+//========================================================================
+//========================================================================
+function initAccount(){
+    document.getElementById("a_userName").value=getCookie("username");
+    document.getElementById("a_email").value=getCookie("email");
+    document.getElementById("a_displayName").value=getCookie("displayname");
+
+    // set district
+    district=getCookie("district")
+    var e=document.getElementById('a_district')
+    var opt=Array.from(e.options)
+    //document.getElementById("a_district").value=getCookie("district");
+    var optionToSelect = opt.find(item => item.text ===district);
+    if(typeof optionToSelect === "undefined"){
+        e.value="Other";
+    }
+    else{
+        e.value = optionToSelect.value;
+    }
+}
+function acctChange(){
+    var exdays=365*4;
+    var dispnm=document.getElementById("a_displayName").value;
+    setCookie('displayname',dispnm,exdays);
+    //var district=document.getElementById("a_district").value;
+    var opt=document.getElementById('a_district').options 
+	var district=opt[opt.selectedIndex].value 
+    setCookie('district',district,exdays);
+    //window.location.reload(true)
+}
+function checkLegacy(){
+    getuid();
+}
+//========================================================================
+//========================================================================
+//                              BUG REPORT
+//========================================================================
+//========================================================================
 function bugreport(){
     //var username=getCookie('username')
     var url="https://docs.google.com/forms/d/e/1FAIpQLScpNS2geMIrvfzYVegEQQpoRgLJufdnEiwJVQGoiWa_PnF-rQ/viewform?usp=pp_url&entry.1286586965="+getCookie('username')+"&entry.764548366="+getCookie('email');//+"&entry.1117624083=myfeedback"
     window.open(url, "_blank");
     //alert('ack!')
 }
-    </script>
-
-</head>
-<body>
-
-<!-- Splash Screen code starts here  -->
-<!--
-<div class="splash">
-    
-    <h1 class = "splash-header">Welcome to my Codepen!!</h1>
-    <img class="img-fluid" alt="New York" id="splashimg"> 
-</div>
--->
-
-
-<!--
-<div class="toast show">
-    <div class="toast-header">
-      Toast Header
-      <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
-    </div>
-    <div class="toast-body">
-      Some text inside the toast body
-    </div>
-  </div>
-  -->
-<!-- Splash Screen code ends here  -->
-
-
-<nav class="navbar navbar-expand-sm bg-primary navbar-dark fixed-top">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="#">JumpJock</a>
-        <a class="navbar-brand" href="#">
-        
-            
-
-        <span id="userDisplayName" style="font-size:0.8em;"></span>
-        <i class="material-icons" >account_circle</i>
-
-        <i class="material-icons" onclick="bugreport()">bug_report</i>
-           
-    
-    </a>
-        
-    </div>
-</nav>
-
-<nav class="navbar navbar-expand-sm bg-primary navbar-dark fixed-bottom">
-    <div class="container-fluid">
-        <!--
-    <a class="navbar-brand" href="mailto:tedonarrival@gmail.com?subject=Images for Jumpjock"><small>Submit district pictures!</small></a>
-    -->
-    <span class="navbar-text">Submit team pictures to <a href="mailto:tedonarrival@gmail.com">tedonarrival@gmail.com</a></span>
-</div>
-</nav> 
-
-
-
-<div class="container-fluid" style="margin-top:60px" id="divRegister">
-    <h3>Registration</h3>
-    <p>Registration is to help with support, and provide personalized content; like district photos.</p>
-    <form name="form1">
-        <div class="input-group mb-3">
-            <span class="input-group-text">Real Name</span>
-            <input type="text" class="form-control" required id="username">
-        </div>
-        <div class="input-group mb-3">
-            <span class="input-group-text">Display Name</span>
-            <input type="text" class="form-control" required id="displayname">
-        </div>
-        <div class="input-group mb-3">
-            <span class="input-group-text">Email</span>
-            <input type="email" class="form-control" required id="email" placeholder="quizzer@example.com">
-        </div>
-        <div class="input-group mb-3">
-            <span class="input-group-text">District</span>
-            <input type="text" class="form-control" pattern="[A-Z]{4}" id="district" required placeholder="ABC">
-        </div>
-        <button type="button" class="btn btn-primary" onclick="register()">Register</button>
-    </form>
-</div>
-
-
-<div class="container-fluid" style="margin-top:60px;display:none" id="divJump">
-  <h5>Jump on random question</h5>
-
-
-
-    <div class="row">
-        <div class="col">
-            <h6>Start</h6>
-        </div>
-        <div class="col">
-            <select id="selectBook1" class="form-select form-select-sm" disabled>
-                <option>Acts</option>
-            </select> 
-        </div>
-        <div class="col">
-            <div class="input-group mb-3 input-group-sm">
-            <input type="text" class="form-control" placeholder="1" id="ch1" value="1">
-            </div>
-        </div>
-        <div class="col">
-            <div class="input-group mb-3 input-group-sm">
-            <input type="text" class="form-control" placeholder="1" id="vs1" value="1">
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col">
-            <h6>End</h6>
-        </div>
-        <div class="col">
-        <select id="selectBook2" class="form-select form-select-sm" disabled>
-            <option>Acts</option>
-        </select> 
-        </div>
-        <div class="col">
-            <div class="input-group mb-3 input-group-sm">
-                <input type="text" class="form-control" placeholder="4" id="ch2" value="4">
-            </div>
-        </div>
-        <div class="col">
-            <div class="input-group mb-3 input-group-sm">
-                <input type="text" class="form-control" placeholder="22" id="vs2" value="22">
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-sm-6">
-            <!--<h6>Start</h6>-->
-            
-        </div>
-        <div class="col-sm-6">
-            <!--<h6>End</h6>-->
-            
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col">
-            <h6>Question Type:</h6>
-        </div>
-        <div class="col">
-            <!--<label for="qtype" class="form-label">Question Type:</label>-->
-            <select class="form-select form-select-sm" id="qtype">
-                <option>ALL</option>
-                <option>CR</option>
-                <option>Q</option>
-                <option>FT</option>
-                <option>MA</option>
-                <option>INT</option>
-                <option>SIT</option>
-            </select>
-        </div>
-    </div>
-    <div class="mb-3">
-        
-    </div>
-
-    <div class="btn-group" style="margin-top:20px">
-        <button type="button" class="btn btn-primary" onclick="getQuestion()" id="buttonGet">Get Question</button>
-        <button type="button" class="btn btn-primary" onclick="jump()" id="buttonJump" style="display:none">Jump</button>
-        <button type="button" class="btn btn-primary" onclick="doneAnswering()" id="buttonAnswered" style="display:none">Finished Answering</button>
-    </div>
-
-    <div>
-        <p id="question"></p>
-        <p id="msg"></p>
-        <p id="answer"></p>
-    </div>
-</div> 
-
-
-<script>
-async function getText(q,cb) {
-  let myObject = await fetch(q);
-  let myText = await myObject.text();
-  cb(myText);
-}
+//========================================================================
+//========================================================================
+//                              QUESTIONS
+//========================================================================
+//========================================================================
 function getQuestion(){
     var e=document.getElementById('question')
     e.textContent='QUESTION: '
@@ -411,27 +360,291 @@ function jump(){
 }
 function doneAnswering(){
     showa();
-    /*
-    var e=document.getElementById('buttonGet');
-    e.style.display ='block';
-    var e=document.getElementById('buttonJump');
-    e.style.display ='none';
-    var e=document.getElementById('buttonAnswered');
-    e.style.display ='none';
-
-    clearTimeout(mytimer);
-    */
 }
+//========================================================================
+//========================================================================
+//                              SPLASH
+//========================================================================
+//========================================================================
 function getSplash(){
     q="api.php?p"
     resp=getText(q,cb_splash);
 }
 function cb_splash(resp){
     console.log(resp)
-    var e=document.getElementById('splashImg');
-    e.src=resp;
+    
+    var J=JSON.parse(resp);
+    if("img" in J){
+        var e=document.getElementById('splashImg');
+        e.src=J['img'];
+    }
+    else{
+        var e=document.getElementById('splashMsg');
+        e.innerHTML=J['msg']
+    }
     e.alt=getCookie('district');
 }
+//========================================================================
+//========================================================================
+//                              AJAX
+//========================================================================
+//========================================================================
+async function getText(q,cb) {
+  let myObject = await fetch(q);
+  let myText = await myObject.text();
+  cb(myText);
+}
+    </script>
+
+</head>
+<body>
+
+<nav class="navbar bg-primary navbar-dark navbar-expand fixed-top">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">JumpJock</a>
+        
+       
+            
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <!--
+                    <span class="navbar-brand" id="userDisplayName" style="font-size:1.0em;"></span>
+                    -->
+                    <a class="navbar-brand" href="#">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" 
+                        data-bs-target="#acctModal"><i class="material-icons" >account_circle</i></button>
+                    </a>
+                    
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="material-icons" onclick="bugreport()">bug_report</i>
+                    </a>
+                </li>
+            </ul>
+
+        
+    </div>
+</nav>
+
+<nav class="navbar navbar-expand-sm bg-primary navbar-dark fixed-bottom">
+    <div class="container-fluid">
+        <!--
+    <a class="navbar-brand" href="mailto:tedonarrival@gmail.com?subject=Images for Jumpjock"><small>Submit district pictures!</small></a>
+    -->
+    <span class="navbar-text">Submit team pictures to <a href="mailto:tedonarrival@gmail.com">tedonarrival@gmail.com</a></span>
+</div>
+</nav> 
+
+<!--
+    ================================================================================
+    ACCOUNT SETTINGS
+    ================================================================================
+-->
+<div class="modal fade" id="acctModal" data-backdrop="false" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content">
+  
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h4 class="modal-title">Account Settings</h4>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+  
+        <!-- Modal body -->
+        <div class="modal-body">
+                <div class="input-group mb-3">
+                    <span class="input-group-text">Real Name</span>
+                    <input type="text" class="form-control" id="a_userName" disabled>
+                </div>
+                <div class="input-group mb-3">
+                    <span class="input-group-text">Display Name</span>
+                    <input type="text" class="form-control" id="a_displayName" onchange="acctChange()">
+                </div>
+                <div class="input-group mb-3">
+                    <span class="input-group-text">Email</span>
+                    <input type="email" class="form-control" id="a_email" disabled>
+                </div>
+                <div class="input-group mb-3">
+                    <span class="input-group-text">District</span>
+                    <!--
+                    <input type="text" class="form-control" pattern="[A-Z]{4}" id="a_district" onchange="acctChange()">
+                    -->
+                    <select id="a_district" onchange="acctChange()">
+						<option value="WGL">WGL</option>
+						<option value="NCD">NCD</option>
+						<option value="NED">NED</option>
+						<option value="PNW">PNW</option>
+						<option value="ECD">ECD</option>
+						<option value="METRO">METRO</option>
+						<option value="Other">Other</option>
+					</select>
+                </div>
+
+                <input type="button" value="Reload Page" onClick="window.location.reload(true)">
+        </div>
+  
+        <!-- Modal footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+        </div>
+  
+      </div>
+    </div>
+  </div>
+
+<!--
+    ================================================================================
+    REGISTRATION
+    ================================================================================
+-->
+<div class="container-fluid" style="margin-top:60px" id="divRegister">
+    <h3>Registration</h3>
+    <p>Registration is to help with support, and provide personalized content; like district photos.</p>
+    <form name="form1">
+        <div class="input-group mb-3">
+            <span class="input-group-text">Real Name</span>
+            <input type="text" class="form-control" required id="username">
+        </div>
+        <div class="input-group mb-3">
+            <span class="input-group-text">Display Name</span>
+            <input type="text" class="form-control" required id="displayname">
+        </div>
+        <div class="input-group mb-3">
+            <span class="input-group-text">Email</span>
+            <input type="email" class="form-control" required id="email" placeholder="quizzer@example.com">
+        </div>
+        <div class="input-group mb-3">
+            <span class="input-group-text">District</span>
+            <!--
+            <input type="text" class="form-control" pattern="[A-Z]{4}" id="district" required placeholder="ABC">
+            -->
+            <select id="district">
+                <option value="WGL">WGL</option>
+                <option value="NCD">NCD</option>
+                <option value="NED">NED</option>
+                <option value="PNW">PNW</option>
+                <option value="ECD">ECD</option>
+                <option value="METRO">METRO</option>
+                <option value="Other">Other</option>
+            </select>
+
+        </div>
+        <button type="button" class="btn btn-primary" onclick="register()">Register</button>
+    </form>
+</div>
+
+
+<div class="container-fluid" style="margin-top:60px;display:none" id="divJump">
+  <h5>Jump on random question</h5>
+<!--
+  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#acctModal">
+    Open modal
+  </button>
+-->
+    <div class="row">
+        <div class="col">
+            <h6>Start</h6>
+        </div>
+        <div class="col">
+            <select id="selectBook1" class="form-select form-select-sm" disabled>
+                <option>Acts</option>
+            </select> 
+        </div>
+        <div class="col">
+            <div class="input-group mb-3 input-group-sm">
+            <input type="text" class="form-control" placeholder="1" id="ch1" value="1">
+            </div>
+        </div>
+        <div class="col">
+            <div class="input-group mb-3 input-group-sm">
+            <input type="text" class="form-control" placeholder="1" id="vs1" value="1">
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <h6>End</h6>
+        </div>
+        <div class="col">
+        <select id="selectBook2" class="form-select form-select-sm" disabled>
+            <option>Acts</option>
+        </select> 
+        </div>
+        <div class="col">
+            <div class="input-group mb-3 input-group-sm">
+                <input type="text" class="form-control" placeholder="4" id="ch2" value="4">
+            </div>
+        </div>
+        <div class="col">
+            <div class="input-group mb-3 input-group-sm">
+                <input type="text" class="form-control" placeholder="22" id="vs2" value="22">
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-6">
+            <!--<h6>Start</h6>-->
+            
+        </div>
+        <div class="col-sm-6">
+            <!--<h6>End</h6>-->
+            
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <h6>Question Type:</h6>
+        </div>
+        <div class="col">
+            <!--<label for="qtype" class="form-label">Question Type:</label>-->
+            <select class="form-select form-select-sm" id="qtype">
+                <option>ALL</option>
+                <option>CR</option>
+                <option>Q</option>
+                <option>FT</option>
+                <option>MA</option>
+                <option>INT</option>
+                <option>SIT</option>
+            </select>
+        </div>
+    </div>
+    <div class="mb-3">
+        
+    </div>
+
+    <div class="btn-group" style="margin-top:20px">
+        <button type="button" class="btn btn-primary" onclick="getQuestion()" id="buttonGet">Get Question</button>
+        <button type="button" class="btn btn-primary" onclick="jump()" id="buttonJump" style="display:none">Jump</button>
+        <button type="button" class="btn btn-primary" onclick="doneAnswering()" id="buttonAnswered" style="display:none">Finished Answering</button>
+    </div>
+
+    <div>
+        <p id="question"></p>
+        <p id="msg"></p>
+        <p id="answer"></p>
+    </div>
+</div> 
+
+<div style="margin-top: 100px">
+    <img class="img-fluid rounded mx-auto d-block" alt="" id="splashImg" style="width:50%;max-width:300px"> 
+    <span id="splashMsg"></span>
+</div>
+
+<!-- Splash Modal -->
+<div id="splashModal" class="modal">
+    <span class="close">&times;</span>
+    <img class="modal-content" id="img01">
+    <div id="caption"></div>
+</div>
+
+<script>
+
+
+
 /*
 var splashScreen = document.querySelector('.splash');
 splashScreen.addEventListener('click',()=>{
@@ -450,8 +663,8 @@ document.getElementById("toastbtn").onclick = function() {
 }
 */
 
-checkCookie();
-getSplash();
+
+
 
 var mytimer;
 IWD=0;
@@ -459,23 +672,27 @@ QTYPE='';
 QUESTION='';
 ANSWER='';
 
+//getuid();
+if(hasCookie()){
+    checkLegacy();
+    getSplash();
+    initAccount();
+}
+
+
+
+
+
 </script>
 
 
-<div style="margin-top: 100px">
-<img class="img-fluid rounded mx-auto d-block" alt="" id="splashImg" style="width:50%;max-width:300px"> 
-</div>
 
-<!-- The Modal -->
-<div id="myModal" class="modal">
-    <span class="close">&times;</span>
-    <img class="modal-content" id="img01">
-    <div id="caption"></div>
-</div>
+
+
   
 <script>
   // Get the modal
-  var modal = document.getElementById("myModal");
+  var modal = document.getElementById("splashModal");
   
   // Get the image and insert it inside the modal - use its "alt" text as a caption
   var img = document.getElementById("splashImg");
@@ -495,9 +712,11 @@ ANSWER='';
     modal.style.display = "none";
     img.style.display="none";
     img.classList.remove('d-block')
-    
   }
-  </script>
+</script>
 
 </body>
+
+
+
 </html>
