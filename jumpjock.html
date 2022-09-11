@@ -64,8 +64,9 @@ function getuid(){
 function cb_getuid(resp){
     console.log('cb_getuid')
     J=JSON.parse(resp)
+    var exdays=365*4;
     if("id" in J){
-        setCookie("id",J["id"])
+        setCookie("id",J["id"],exdays)
         window.location.reload(true)
     }
     else{
@@ -472,8 +473,9 @@ async function getText(q,cb) {
 //========================================================================
 //========================================================================
 function updateMaterial(){
+    var exdays=365*4;
     if(getCookie('material')==""){
-        setCookie('material','ACTS');
+        setCookie('material','ACTS',exdays);
     }
     var mat=getCookie('material')
     if(mat=='ACTS'){

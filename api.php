@@ -368,6 +368,10 @@ if(array_key_exists("p",$_GET)){
 
 // logs
 if(array_key_exists("log",$_GET)){
+    header('Expires: Sun, 01 Jan 2014 00:00:00 GMT');
+    header('Cache-Control: no-store, no-cache, must-revalidate');
+    header('Cache-Control: post-check=0, pre-check=0', FALSE);
+    header('Pragma: no-cache');
     echo tailFile("logs.txt",$_GET["log"]);
     die;
 }
@@ -384,6 +388,10 @@ if(array_key_exists("o",$_GET)){
     
         $q=pickRandom($cont);
         $j=json_encode($q);
+        header('Expires: Sun, 01 Jan 2014 00:00:00 GMT');
+        header('Cache-Control: no-store, no-cache, must-revalidate');
+        header('Cache-Control: post-check=0, pre-check=0', FALSE);
+        header('Pragma: no-cache');
         echo $j;
         die;
     }
@@ -401,6 +409,10 @@ $db=loadDB('acts_db.json');
 if(array_key_exists("i",$_GET)){
     // question by index
     $q=qByIndex((int)$_GET["i"]);
+    header('Expires: Sun, 01 Jan 2014 00:00:00 GMT');
+    header('Cache-Control: no-store, no-cache, must-revalidate');
+    header('Cache-Control: post-check=0, pre-check=0', FALSE);
+    header('Pragma: no-cache');
     echo json_encode($q);
 }
 elseif(array_key_exists("rs",$_GET)&array_key_exists("re",$_GET)){
@@ -424,6 +436,11 @@ elseif(array_key_exists("rs",$_GET)&array_key_exists("re",$_GET)){
 
     $q=pickRandom($cont);
     $j=json_encode($q);
+
+    header('Expires: Sun, 01 Jan 2014 00:00:00 GMT');
+    header('Cache-Control: no-store, no-cache, must-revalidate');
+    header('Cache-Control: post-check=0, pre-check=0', FALSE);
+    header('Pragma: no-cache');
     echo $j;
 }
 
