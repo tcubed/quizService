@@ -263,7 +263,13 @@ function registerUser(){
 	else{
         // get next ID
         $uid=array_keys($db["users"]);
-        $nextId=max($uid)+1;
+        if(count($uid)==0){
+            $nextId=0;
+        }
+        else{
+            $nextId=max($uid)+1;
+        }
+        
 
         // assign
         $msg="New email registration (".$_COOKIE["email"].").  Assigned user id=".$nextId.".";
@@ -278,7 +284,8 @@ function registerUser(){
 }
 function check_user(){
     // check that all expected cookies are populated
-    $req=array("username","displayname","email","district","id");
+    //$req=array("firstName","lastName","displayName","email","district","id");
+    $req=array("id");
     //$req=array("username","displayname","email","district");
     $msg="";$status=0;
     foreach($req as $k){
@@ -292,14 +299,22 @@ function check_user(){
         die;
     }
     else{
-        $nmtok=explode(" ",$_COOKIE["username"]);
-        if(count($nmtok)>1){
-            $nm=substr($nmtok[0],0,1).' '.$nmtok[1];
-        }
-        else{
-            $nm=$nmtok[0];
-        }
-        $msg=$msg."User:'".$nm."'.";
+        //$nmtok=explode(" ",$_COOKIE["username"]);
+        //if(count($nmtok)>1){
+        //    $nm=substr($nmtok[0],0,1).' '.$nmtok[1];
+       // }
+        //else{
+        //    $nm=$nmtok[0];
+       // }
+        //$nm=$_COOKIE["firstName"]." ".$_COOKIE["lastName"];
+        //$msg=$msg."User:'".$nm."'.";
+        $db=load_data();
+        $U=$db["users"];
+        $u=$U[$_COOKIE["id"]];
+
+        //$msg=$msg."ID:".$_COOKIE["id"].".";
+        $nm=$u["firstName"]." ".$u["lastName"];
+        $msg=$msg.$nm."(ID:".$_COOKIE["id"].").";
         logVisitors($msg);
     }
 }
